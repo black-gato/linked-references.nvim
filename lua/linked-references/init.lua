@@ -17,6 +17,33 @@ M.get_alias = function()
 	return a
 end
 
+M.create_tmp_buf = function(input)
+	local cmd = vim.fn.system('rg -e ".* \\[\\[.*\\|' .. input .. '\\]\\].*"')
+	local lines = vim.split(cmd, "\n")
+	local cwd = vim.fn.getcwd()
+	Header = ""
+	Output = {}
+	for _, v in ipairs(lines) do
+		local file, sentince = string.match(v, "(.+):(.+) %[%[") -- we are grabbing the file and the string tagged
+		local _, _, match = string.match(Header, "### %[(.+)%]") -- we are grapping the filename form the markdown link
+		if file == nil then
+			goto continue
+		end
+
+		if not (match == file) or (Header == "") then
+			Header = string.format('### [%s]("%s/%s")', file, cwd, file)
+			table.insert(Output, Header)
+		end
+
+		sentince = string.format('  - "%s"', sentince)
+		table.insert(Output, sentince)
+		::continue::
+	end
+	vim.cmd("vsplit | enew | setfiletype markdown | set fileencoding=utf-8")
+	local bufnr = vim.api.nvim_get_current_buf()
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, Output)
+end
+
 M.pick_alias = function(opts)
 	pickers
 		.new(opts, {
