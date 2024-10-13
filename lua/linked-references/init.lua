@@ -1,6 +1,8 @@
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local config = require("telescope.config").values
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
 local log = require("plenary.log"):new()
 log.level = "debug"
 
@@ -22,6 +24,14 @@ M.pick_alias = function(opts)
 				unpack(M.get_alias()),
 			}),
 			sorter = config.generic_sorter(opts),
+			attach_mappings = function(prompt_bufnr)
+				actions.select_default:replace(function()
+					local selection = action_state.get_selected_entry()
+					actions.close(prompt_bufnr)
+					print(vim.inspect(selection.value))
+				end)
+				return true
+			end,
 		})
 		:find()
 end
