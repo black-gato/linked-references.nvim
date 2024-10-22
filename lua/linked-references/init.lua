@@ -70,13 +70,12 @@ M.pick_alias = function(opts)
 				actions.select_default:replace(function()
 					local selection = action_state.get_selected_entry()
 					actions.close(prompt_bufnr)
-					M.create_tmp_buf(selection.value)
+					create_tmp_buf(selection.value)
 				end)
 				return true
 			end,
 		})
 		:find()
 end
-M.pick_alias()
 
 return M
