@@ -39,24 +39,24 @@ end
 local create_tmp_buf = function(input)
 	local cmd = vim.fn.system("rg " .. M.config.path .. ' -e ".* \\[\\[.*\\|' .. input .. '\\]\\].*"')
 	local lines = vim.split(cmd, "\n")
-	Header = ""
-	Output = {}
+	local header = ""
+	local output = {}
 	for _, v in pairs(lines) do
 		local file, sentince = string.match(v, "(.+):(.+) %[%[") -- we are grabbing the file and the string tagged
-		local _, _, match = string.match(Header, "### %[(.+)%]") -- we are grapping the filename form the markdown link
+		local _, _, match = string.match(header, "### %[(.+)%]") -- we are grapping the filename form the markdown link
 		if file ~= nil then
-			if not (match == file) or (Header == "") then
-				Header = string.format('### [%s]("%s")', file, file)
-				table.insert(Output, Header)
+			if (match ~= file) or (header ~= "") then
+				header = string.format('### [%s]("%s")', file, file)
+				table.insert(output, header)
 			end
 
 			sentince = string.format('  - "%s"', sentince)
-			table.insert(Output, sentince)
+			table.insert(output, sentince)
 		end
 	end
 	vim.cmd("vsplit | enew | setfiletype markdown | set fileencoding=utf-8")
 	local bufnr = vim.api.nvim_get_current_buf()
-	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, Output)
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
 end
 
 M.pick_alias = function(opts)
