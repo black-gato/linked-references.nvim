@@ -6,28 +6,47 @@ local action_state = require("telescope.actions.state")
 
 local M = {}
 
-M.path = "/Users/anthonymirville/Projects/Life"
+--local files = vim.fs.find(function(name)
+--	return name:match(".*%.md$")
+--end, { limit = math.huge, type = "file", path = M.config.path })
+
+local function map(mode, combo, mapping, desc)
+	if combo then
+		vim.keymap.set(mode, combo, mapping, { silent = true, desc = desc })
+	end
+end
 
 M.get_alias = function()
-	local cmd = "find " .. M.path .. ' -type f -name "*.md" | xargs -I {} yq --front-matter=extract  ".aliases[]" {}'
+	local cmd = "find "
+		.. M.config.path
+		.. ' -type f -name "*.md" | xargs -I {} yq --front-matter=extract  ".aliases[]" {}'
 	local output = vim.fn.system(cmd)
 	local alias_list = vim.split(output, "\n")
-
 	return alias_list
 end
 
-M.create_tmp_buf = function(input)
-	local cmd = vim.fn.system("rg " .. M.path .. ' -e ".* \\[\\[.*\\|' .. input .. '\\]\\].*"')
+M.setup = function(opts)
+	local default = {
+		path = ".",
+		mappings = {
+			search_alias = "<leader>;",
+		},
+	}
+	M.config = vim.tbl_extend("keep", opts or {}, default)
+	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias")
+end
+---@param input string
+local create_tmp_buf = function(input)
+	local cmd = vim.fn.system("rg " .. M.config.path .. ' -e ".* \\[\\[.*\\|' .. input .. '\\]\\].*"')
 	local lines = vim.split(cmd, "\n")
-	local cwd = M.path
 	Header = ""
 	Output = {}
-	for _, v in ipairs(lines) do
+	for _, v in pairs(lines) do
 		local file, sentince = string.match(v, "(.+):(.+) %[%[") -- we are grabbing the file and the string tagged
 		local _, _, match = string.match(Header, "### %[(.+)%]") -- we are grapping the filename form the markdown link
 		if file ~= nil then
 			if not (match == file) or (Header == "") then
-				Header = string.format('### [%s]("%s%s")', file, cwd, file)
+				Header = string.format('### [%s]("%s")', file, file)
 				table.insert(Output, Header)
 			end
 
