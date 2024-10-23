@@ -35,28 +35,46 @@ M.setup = function(opts)
 	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias")
 end
----@param input string
-local create_tmp_buf = function(input)
+---@param content table
+local create_tmp_buf = function(content)
+	--- need to start passing around the content title to name the buffer
+	--- need to make the file be able to just quit with q not q!
+	vim.cmd("vsplit | enew | setfiletype markdown |file reference | set fileencoding=utf-8")
+	local bufnr = vim.api.nvim_get_current_buf()
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+end
+
+local alias_match = function(input)
+	-- need to Make the pattern configurable
 	local cmd = vim.fn.system("rg " .. M.config.path .. ' -e ".* \\[\\[.*\\|' .. input .. '\\]\\].*"')
+	-- Need to raise and error if cmd or lines is empty
 	local lines = vim.split(cmd, "\n")
+	return lines
+end
+
+local create_reference_document = function(lines)
 	local header = ""
 	local output = {}
-	for _, v in pairs(lines) do
-		local file, sentince = string.match(v, "(.+):(.+) %[%[") -- we are grabbing the file and the string tagged
-		local _, _, match = string.match(header, "### %[(.+)%]") -- we are grapping the filename form the markdown link
-		if file ~= nil then
-			if (match ~= file) or (header ~= "") then
-				header = string.format('### [%s]("%s")', file, file)
-				table.insert(output, header)
-			end
+	for _, line in pairs(lines) do
+		local file_path, sentince = string.match(line, "(.+):(.+) %[%[") -- we are grabbing the filename and the tagged line
+		local file_path_match = string.match(header, "### %[(.+)%]") -- we are grabbing the filename form the markdown link
 
+		if file_path_match ~= file_path and file_path ~= nil then
+			header = string.format('### [%s]("%s")', file_path, file_path)
+			table.insert(output, header)
+		end
+
+		if sentince ~= nil then
 			sentince = string.format('  - "%s"', sentince)
 			table.insert(output, sentince)
 		end
 	end
-	vim.cmd("vsplit | enew | setfiletype markdown | set fileencoding=utf-8")
-	local bufnr = vim.api.nvim_get_current_buf()
-	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
+	return output
+end
+local generate_reference_list = function(input)
+	local lines = alias_match(input)
+	local ref_content = create_reference_document(lines)
+	create_tmp_buf(ref_content)
 end
 
 M.pick_alias = function(opts)
@@ -70,7 +88,7 @@ M.pick_alias = function(opts)
 				actions.select_default:replace(function()
 					local selection = action_state.get_selected_entry()
 					actions.close(prompt_bufnr)
-					create_tmp_buf(selection.value)
+					generate_reference_list(selection.value)
 				end)
 				return true
 			end,
