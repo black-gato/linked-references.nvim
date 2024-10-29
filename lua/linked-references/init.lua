@@ -64,8 +64,23 @@ local create_reference_document = function(lines)
 	end
 	return output
 end
+
+---@param content table
+local create_tmp_buf = function(content)
+	-- BUG: need to make the file be able to just quit with q not q!
+	if #content ~= 0 then
+		vim.cmd("vsplit | enew | e " .. M._alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
+		local bufnr = vim.api.nvim_get_current_buf()
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+		return
+	end
+
+	vim.notify_once("Looks You haven't written anything on this topics.", vim.log.levels.INFO)
+end
+
 local generate_reference_list = function(input)
-	local lines = alias_match(input)
+	M._alias_name = input
+	local lines = alias_match(M._alias_name)
 	local ref_content = create_reference_document(lines)
 	create_tmp_buf(ref_content)
 end
