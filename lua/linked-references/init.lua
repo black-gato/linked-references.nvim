@@ -16,7 +16,7 @@ local function map(mode, combo, mapping, desc)
 	end
 end
 
-M.get_alias = function()
+local get_alias = function()
 	local cmd = "find "
 		.. M.config.path
 		.. ' -type f -name "*.md" | xargs -I {} yq --front-matter=extract  ".aliases[]" {}'
@@ -81,7 +81,7 @@ M.pick_alias = function(opts)
 	pickers
 		.new(opts, {
 			finder = finders.new_table({
-				unpack(M.get_alias()),
+				unpack(get_alias()),
 			}),
 			sorter = config.generic_sorter(opts),
 			attach_mappings = function(prompt_bufnr)
