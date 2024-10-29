@@ -35,19 +35,11 @@ M.setup = function(opts)
 	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias")
 end
----@param content table
-local create_tmp_buf = function(content)
-	--- need to start passing around the content title to name the buffer
-	--- need to make the file be able to just quit with q not q!
-	vim.cmd("vsplit | enew | setfiletype markdown |file reference | set fileencoding=utf-8")
-	local bufnr = vim.api.nvim_get_current_buf()
-	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
-end
 
 local alias_match = function(input)
-	-- need to Make the pattern configurable
-	local cmd = vim.fn.system("rg " .. M.config.path .. ' -e ".* \\[\\[.*\\|' .. input .. '\\]\\].*"')
-	-- Need to raise and error if cmd or lines is empty
+	-- TODO: need to Make the pattern configurable
+	-- TODO: make the patern go full line
+	local cmd = vim.fn.system("rg " .. M.config.path .. ' -e ".*\\[\\[.*\\|' .. input .. '\\]\\].*"')
 	local lines = vim.split(cmd, "\n")
 	return lines
 end
@@ -95,5 +87,10 @@ M.pick_alias = function(opts)
 		})
 		:find()
 end
+
+--NOTE: Uncomment lines below to hot-reload test
+
+--M.setup({ path = "/Users/anthonymirville/Projects/Life" })
+--M.pick_alias({})
 
 return M
