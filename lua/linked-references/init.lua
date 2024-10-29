@@ -48,7 +48,8 @@ local create_reference_document = function(lines)
 	local header = ""
 	local output = {}
 	for _, line in pairs(lines) do
-		local file_path, sentince = string.match(line, "(.+):(.+) %[%[") -- we are grabbing the filename and the tagged line
+		local full_line = string.gsub(line, "%[%[.+%]%]", "")
+		local file_path, sentince = string.match(full_line, "(.+):(.+)") -- we are grabbing the filename and the tagged line
 		local file_path_match = string.match(header, "### %[(.+)%]") -- we are grabbing the filename form the markdown link
 
 		if file_path_match ~= file_path and file_path ~= nil then
