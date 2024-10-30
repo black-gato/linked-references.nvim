@@ -5,6 +5,7 @@ local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 
 local M = {}
+
 --local files = vim.fs.find(function(name)
 --	return name:match(".*%.md$")
 --end, { limit = math.huge, type = "file", path = M.config.path })
@@ -31,12 +32,12 @@ M.setup = function(opts)
 			search_alias = "<leader>;",
 		},
 	}
-	M.config = vim.tbl_extend("keep", default, opts or {})
+	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias")
 end
 
 local alias_match = function(input)
-	--TODO: need to Make the pattern configurable
+	-- TODO: need to Make the pattern configurable
 	-- TODO: make the patern go full line
 	local cmd = vim.fn.system("rg " .. M.config.path .. ' -e ".*\\[\\[.*\\|' .. input .. '\\]\\].*"')
 	local lines = vim.split(cmd, "\n")
