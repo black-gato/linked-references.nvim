@@ -26,4 +26,15 @@ This for me to learn about building a good plugin for a new editor that I like. 
 
 Requires: ripgrep, yq, find, telescope neovim .0.9.0
 
+If you use Lazy.nvim as your plugin manager:
 
+```{
+    'black-gato/linked-references.nvim',
+    opts = {
+      path = '.',
+      mappings = {
+        search_alias = '<leader>;',
+      },
+    },
+  },
+```
