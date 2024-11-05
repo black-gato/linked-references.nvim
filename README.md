@@ -18,14 +18,13 @@ This for me to learn about building a good plugin for a new editor that I like. 
 - [x]  Need to make sure that all links can be referenced
 - [x] auto complete for tags and pages
 - [x] Make file read-only 
-- [ ] handle errors
+  - [ ] handle errors
 - [ ] Support Indent level note
 - [ ] Make it into an actual plugin
 
 ### Setup
 
-Requires: ripgrep, yq, find, telescope neovim .0.9.0
-
+Requires: ripgrep, yq, find, telescope neovim .0.9.0 obsidian.nvm or a markdown note taking system that uses frontmatter
 If you use Lazy.nvim as your plugin manager:
 
 ```{
