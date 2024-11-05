@@ -6,9 +6,33 @@ local action_state = require("telescope.actions.state")
 
 local M = {}
 
---local files = vim.fs.find(function(name)
---	return name:match(".*%.md$")
---end, { limit = math.huge, type = "file", path = M.config.path })
+--local grap_alias = function()
+--	local files = vim.fs.find(function(name)
+--		return name:match(".*%.md$")
+--	end, { limit = math.huge, type = "file", path = "/Users/anthonymirville/Projects/Life" })
+--
+--	print(vim.inspect(files))
+--	for _, file in pairs(files) do
+--		local content = ""
+--		local f = io.open(file, "r")
+--		local count = 0
+--
+--		for line in f:lines() do
+--			if line:match("^%-%-%-$") then
+--				count = count + 1
+--			end
+--
+--			content = content .. "\n" .. line
+--			if count == 2 then
+--				break
+--			end
+--		end
+--
+--		-- NOTE: I think we just  need to do the codecrafters course to understand parsing
+--		-- NOTE: my crude idea is just to match on the config front matter value
+--		f:close()
+--	end
+--end
 
 local function map(mode, combo, mapping, desc)
 	if combo then
@@ -75,6 +99,8 @@ end
 ---@param content table
 local create_tmp_buf = function(content)
 	-- BUG: need to make the file be able to just quit with q not q!
+	-- BUG: when a buffer already exists this fails and opens a new empty buffer need to check if buffer already exists.
+
 	if #content ~= 0 then
 		vim.cmd("vsplit | enew | e " .. M._alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
 		local bufnr = vim.api.nvim_get_current_buf()
@@ -114,6 +140,6 @@ end
 --NOTE: Uncomment lines below to hot-reload test
 
 --M.setup({ path = "/Users/anthonymirville/Projects/Life" })
---M.pick_alias({})
+--M.pick_alias()
 
 return M
