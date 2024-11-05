@@ -17,9 +17,12 @@ local function map(mode, combo, mapping, desc)
 end
 
 local get_alias = function()
+	-- TODO: Make the front matter and the datatype customizable
 	local cmd = "find "
 		.. M.config.path
-		.. ' -type f -name "*.md" | xargs -I {} yq --front-matter=extract  ".aliases[]" {}'
+		.. ' -type f -name "*.md" | xargs -I {} yq --front-matter=extract .'
+		.. M.config.front_matter
+		.. "'[]' {}"
 	local output = vim.fn.system(cmd)
 	local alias_list = vim.split(output, "\n")
 	return alias_list
@@ -28,6 +31,7 @@ end
 M.setup = function(opts)
 	local default = {
 		path = ".",
+		front_matter = "aliases",
 		mappings = {
 			search_alias = "<leader>;",
 		},
