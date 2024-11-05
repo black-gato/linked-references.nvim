@@ -42,9 +42,9 @@ end
 
 local alias_match = function(input)
 	-- TODO: need to Make the pattern configurable
-	-- TODO: make the patern go full line
-	local cmd = vim.fn.system("rg " .. M.config.path .. ' -e ".*\\[\\[.*\\|' .. input .. '\\]\\].*"')
-	local lines = vim.split(cmd, "\n")
+	-- TODO: make the pattern go full line
+	local cmd = vim.fn.system("rg -n -i " .. M.config.path .. ' -e  ".*\\[\\[.*\\|' .. input .. '\\]\\].*"')
+	local lines = vim.split(cmd, "\n", { trimempty = true })
 	return lines
 end
 
@@ -52,9 +52,12 @@ local create_reference_document = function(lines)
 	local header = ""
 	local output = {}
 	for _, line in pairs(lines) do
-		local full_line = string.gsub(line, "%[%[.+%]%]", "")
-		local file_path, sentince = string.match(full_line, "(.+):(.+)") -- we are grabbing the filename and the tagged line
+		-- local pattern = "%[%[[^|]-%|" .. M._alias_name .. "%]%]"
+		-- local full_line = string.gsub(line, pattern, "") BUG: don't use use this unless you want to remove the tag in the sentence
+
+		local file_path, line_num, sentince = string.match(line, "(.+%.md):(.+):(.+)") -- we are grabbing the filename and the tagged line
 		local file_path_match = string.match(header, "### %[(.+)%]") -- we are grabbing the filename form the markdown link
+		--print(vim.inspect("Path: " .. file_path .. ", Line Num:" .. line_num .. ", sentince: " .. sentince))
 
 		if file_path_match ~= file_path and file_path ~= nil then
 			header = string.format('### [%s]("%s")', file_path, file_path)
