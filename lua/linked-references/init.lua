@@ -6,53 +6,13 @@ local action_state = require("telescope.actions.state")
 
 local M = {}
 
---local grap_alias = function()
---	local files = vim.fs.find(function(name)
---		return name:match(".*%.md$")
---	end, { limit = math.huge, type = "file", path = "/Users/anthonymirville/Projects/Life" })
---
---	print(vim.inspect(files))
---	for _, file in pairs(files) do
---		local content = ""
---		local f = io.open(file, "r")
---		local count = 0
---
---		for line in f:lines() do
---			if line:match("^%-%-%-$") then
---				count = count + 1
---			end
---
---			content = content .. "\n" .. line
---			if count == 2 then
---				break
---			end
---		end
---
---		-- NOTE: I think we just  need to do the codecrafters course to understand parsing
---		-- NOTE: my crude idea is just to match on the config front matter value
---		f:close()
---	end
---end
-
 local function map(mode, combo, mapping, desc)
 	if combo then
 		vim.keymap.set(mode, combo, mapping, { silent = true, desc = desc })
 	end
 end
 
-local get_alias = function()
-	-- TODO: Make the front matter and the datatype customizable
-	local cmd = "find "
-		.. M.config.path
-		.. ' -type f -name "*.md" | xargs -I {} yq --front-matter=extract .'
-		.. M.config.front_matter
-		.. "'[]' {}"
-	local output = vim.fn.system(cmd)
-	local alias_list = vim.split(output, "\n")
-	return alias_list
-end
-
-M.setup = function(opts)
+function M.setup(opts)
 	local default = {
 		path = ".",
 		front_matter = "aliases",
