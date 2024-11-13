@@ -84,18 +84,59 @@ local create_tmp_buf = function(content)
 	vim.notify_once("Looks You haven't written anything on this topics.", vim.log.levels.INFO)
 end
 
+local get_matches = function(f)
+	local wiki_tag = M._wiki_tag
+	local markdown = ""
+	local file_flag = ""
+	for _, file in pairs(f) do
+		file_flag = file_flag .. " " .. file
+	end
+	local cmd = "/Users/anthonymirville/linked-references.nvim/lua/markdown-parser --wikiTag='"
+		.. wiki_tag
+		.. "' --files='"
+		.. file_flag
+		.. "'"
+	vim.fn.jobstart(cmd, {
+		stdout_buffered = true, -- Set to true for buffered output
+		on_stdout = function(_, data)
+			if data then
+				vim.schedule(function()
+					markdown = data
+				end)
+			end
+		end,
+		on_stderr = function(_, data)
+			if data ~= "" then
+				vim.schedule(function()
+					print("Error:", table.concat(data, "\n"))
+				end)
+			end
+		end,
+		on_exit = function(_, code)
+			vim.schedule(function()
+				create_tmp_buf(markdown)
+			end)
+		end,
+	})
+end
+
 local generate_reference_list = function(input)
-	M._alias_name = input
-	local lines = alias_match(M._alias_name)
-	local ref_content = create_reference_document(lines)
-	create_tmp_buf(ref_content)
+	local files = alias_match(input)
+	get_matches(files)
 end
 
 M.pick_alias = function(opts)
 	pickers
 		.new(opts, {
 			finder = finders.new_table({
-				unpack(get_alias()),
+				results = create_fm_list(get_front_matter()),
+				entry_maker = function(entry)
+					return {
+						value = entry,
+						display = entry.alias_name,
+						ordinal = entry.alias_name,
+					}
+				end,
 			}),
 			sorter = config.generic_sorter(opts),
 			attach_mappings = function(prompt_bufnr)
@@ -111,8 +152,7 @@ M.pick_alias = function(opts)
 end
 
 --NOTE: Uncomment lines below to hot-reload test
-
---M.setup({ path = "/Users/anthonymirville/Projects/Life" })
---M.pick_alias()
+M.setup({ path = "/Users/anthonymirville/Projects/Life" })
+M.pick_alias()
 
 return M
