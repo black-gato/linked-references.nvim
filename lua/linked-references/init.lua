@@ -23,44 +23,57 @@ function M.setup(opts)
 	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias")
 end
+-- this grabs alll the front matter fields and values from all files in M.config.path
+local get_front_matter = function()
+	-- TODO: Make the front matter and the datatype customizable
+	local cmd = "find "
+		.. M.config.path
+		.. ' -type f -name "*.md" | xargs -I {} yq -o=json -I=0 --front-matter=extract . {}'
+	local output = vim.fn.system(cmd)
+	local front_matter_obj = {}
+	local json_string = vim.split(output, "\n", { plain = true, trimempty = true })
+	for _, line in pairs(json_string) do
+		if line ~= "null" then
+			local entry = vim.json.decode(line)
+			table.insert(front_matter_obj, entry)
+		end
+	end
+	return front_matter_obj
+end
 
+-- create an table with document id and alias name
+local create_fm_list = function(front_matter_obj)
+	local alias_obj = {}
+	for _, f_m in pairs(front_matter_obj) do
+		if f_m.aliases ~= nil and next(f_m.aliases) ~= nil then
+			if #f_m.aliases == 1 then
+				table.insert(alias_obj, { alias_name = f_m.aliases[1], id = f_m.id })
+			else
+				for _, alias in pairs(f_m.aliases) do
+					table.insert(alias_obj, { alias_name = alias, id = f_m.id })
+				end
+			end
+		end
+	end
+	return alias_obj
+end
 local alias_match = function(input)
 	-- TODO: need to Make the pattern configurable
 	-- TODO: make the pattern go full line
-	local cmd = vim.fn.system("rg -n -i " .. M.config.path .. ' -e  ".*\\[\\[.*\\|' .. input .. '\\]\\].*"')
+	M._alias_name = input.alias_name
+	M._wiki_tag = "[[" .. input.id .. "|" .. input.alias_name .. "]]"
+
+	local cmd = vim.fn.system(
+		"rg -l -i " .. M.config.path .. ' -e  ".* \\[\\[' .. input.id .. "\\|" .. input.alias_name .. '\\]\\].*"'
+	)
 	local lines = vim.split(cmd, "\n", { trimempty = true })
 	return lines
 end
 
-local create_reference_document = function(lines)
-	local header = ""
-	local output = {}
-	for _, line in pairs(lines) do
-		-- local pattern = "%[%[[^|]-%|" .. M._alias_name .. "%]%]"
-		-- local full_line = string.gsub(line, pattern, "") BUG: don't use use this unless you want to remove the tag in the sentence
-
-		local file_path, line_num, sentince = string.match(line, "(.+%.md):(.+):(.+)") -- we are grabbing the filename and the tagged line
-		local file_path_match = string.match(header, "### %[(.+)%]") -- we are grabbing the filename form the markdown link
-		--print(vim.inspect("Path: " .. file_path .. ", Line Num:" .. line_num .. ", sentince: " .. sentince))
-
-		if file_path_match ~= file_path and file_path ~= nil then
-			header = string.format('### [%s]("%s")', file_path, file_path)
-			table.insert(output, header)
-		end
-
-		if sentince ~= nil then
-			sentince = string.format('  - "%s"', sentince)
-			table.insert(output, sentince)
-		end
-	end
-	return output
-end
-
----@param content table
+---@param content string
 local create_tmp_buf = function(content)
 	-- BUG: need to make the file be able to just quit with q not q!
 	-- BUG: when a buffer already exists this fails and opens a new empty buffer need to check if buffer already exists.
-
 	if #content ~= 0 then
 		vim.cmd("vsplit | enew | e " .. M._alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
 		local bufnr = vim.api.nvim_get_current_buf()
