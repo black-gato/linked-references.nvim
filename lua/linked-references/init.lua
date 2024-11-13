@@ -59,7 +59,6 @@ local create_fm_list = function(front_matter_obj)
 end
 local alias_match = function(input)
 	-- TODO: need to Make the pattern configurable
-	-- TODO: make the pattern go full line
 	M._alias_name = input.alias_name
 	M._wiki_tag = "[[" .. input.id .. "|" .. input.alias_name .. "]]"
 
@@ -152,7 +151,7 @@ M.pick_alias = function(opts)
 end
 
 --NOTE: Uncomment lines below to hot-reload test
-M.setup({ path = "/Users/anthonymirville/Projects/Life" })
-M.pick_alias()
+-- M.setup({ path = "/Users/anthonymirville/Projects/Life" })
+-- M.pick_alias()
 
 return M
