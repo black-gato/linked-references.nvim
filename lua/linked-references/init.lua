@@ -90,11 +90,7 @@ local get_matches = function(f)
 	for _, file in pairs(f) do
 		file_flag = file_flag .. " " .. file
 	end
-	local cmd = "/Users/anthonymirville/linked-references.nvim/lua/markdown-parser --wikiTag='"
-		.. wiki_tag
-		.. "' --files='"
-		.. file_flag
-		.. "'"
+	local cmd = "markdown-parser --wikiTag='" .. wiki_tag .. "' --files='" .. file_flag .. "'"
 	vim.fn.jobstart(cmd, {
 		stdout_buffered = true, -- Set to true for buffered output
 		on_stdout = function(_, data)
