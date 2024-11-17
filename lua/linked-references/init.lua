@@ -25,7 +25,6 @@ function M.setup(opts)
 end
 -- this grabs alll the front matter fields and values from all files in M.config.path
 local get_front_matter = function()
-	-- TODO: Make the front matter and the datatype customizable
 	local cmd = "find "
 		.. M.config.path
 		.. ' -type f -name "*.md" | xargs -I {} yq -o=json -I=0 --front-matter=extract . {}'
@@ -73,8 +72,9 @@ end
 local create_tmp_buf = function(content)
 	-- BUG: need to make the file be able to just quit with q not q!
 	-- BUG: when a buffer already exists this fails and opens a new empty buffer need to check if buffer already exists.
+
 	if #content ~= 0 then
-		vim.cmd("vsplit | enew | e " .. M._alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
+		vim.cmd("vsplit |e " .. M._alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
 		local bufnr = vim.api.nvim_get_current_buf()
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
 		return
