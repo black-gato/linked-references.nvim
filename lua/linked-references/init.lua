@@ -16,12 +16,13 @@ function M.setup(opts)
 	local default = {
 		path = ".",
 		front_matter = "aliases",
+		wiki_tag_format = "[[<id>|<alias>]]",
 		mappings = {
 			search_alias = "<leader>;",
 		},
 	}
 	M.config = vim.tbl_extend("keep", opts or {}, default)
-	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias")
+	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias test")
 end
 -- this grabs alll the front matter fields and values from all files in M.config.path
 local get_front_matter = function()
@@ -38,6 +39,16 @@ local get_front_matter = function()
 		end
 	end
 	return front_matter_obj
+end
+local format_wiki_tag = function(entry)
+	local format = M.config.wiki_tag_format
+	if type(format) == "function" then
+		return format(entry)
+	elseif type(format) == "string" then
+		return format:gsub("<id>", entry.id):gsub("<alias>", entry.alias_name)
+	else
+		error("wiki_tag_format must be a string or function")
+	end
 end
 
 -- create an table with document id and alias name
@@ -58,23 +69,53 @@ local create_fm_list = function(front_matter_obj)
 end
 local alias_match = function(input)
 	-- TODO: need to Make the pattern configurable
-	M._alias_name = input.alias_name
-	M._wiki_tag = "[[" .. input.id .. "|" .. input.alias_name .. "]]"
+	M._wiki_tags = ""
+	local lines = {}
+	local cmd
+	if #input > 1 then
+		for _, obj in ipairs(input) do
+			M._wiki_tags = M._wiki_tags .. format_wiki_tag(obj.value)
+			cmd = vim.fn.system(
+				"rg -l -i "
+					.. M.config.path
+					.. ' -e  ".* \\[\\['
+					.. obj.value.id
+					.. "\\|"
+					.. obj.value.alias_name
+					.. '\\]\\].*"'
+			)
+			if #vim.split(cmd, "\n", { trimempty = true }) ~= 0 then
+				table.insert(lines, vim.split(cmd, "\n", { trimempty = true }))
+			end
+		end
+		return lines
+	end
+	input = input[1]
+	M._alias_name = input.value.alias_name
+	M._wiki_tags = "[[" .. input.value.id .. "|" .. input.value.alias_name .. "]]"
 
-	local cmd = vim.fn.system(
-		"rg -l -i " .. M.config.path .. ' -e  ".* \\[\\[' .. input.id .. "\\|" .. input.alias_name .. '\\]\\].*"'
+	cmd = vim.fn.system(
+		"rg -l -i "
+			.. M.config.path
+			.. ' -e  ".* \\[\\['
+			.. input.value.id
+			.. "\\|"
+			.. input.value.alias_name
+			.. '\\]\\].*"'
 	)
-	local lines = vim.split(cmd, "\n", { trimempty = true })
+	lines = vim.split(cmd, "\n", { trimempty = true })
 	return lines
 end
 
 ---@param content string
 local create_tmp_buf = function(content)
+	local alias_name = M._alias_name
+	if alias_name == "" then
+		alias_name = "Group Search"
+	end
 	-- BUG: need to make the file be able to just quit with q not q!
-	-- BUG: when a buffer already exists this fails and opens a new empty buffer need to check if buffer already exists.
-
 	if #content ~= 0 then
-		vim.cmd("vsplit |e " .. M._alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
+		vim.cmd("vsplit |e " .. alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
 		local bufnr = vim.api.nvim_get_current_buf()
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
 		return
@@ -84,13 +125,14 @@ local create_tmp_buf = function(content)
 end
 
 local get_matches = function(f)
-	local wiki_tag = M._wiki_tag
+	local wiki_tag = M._wiki_tags
 	local markdown = ""
 	local file_flag = ""
-	for _, file in pairs(f) do
-		file_flag = file_flag .. " " .. file
+	local files = vim.iter(f):flatten():totable()
+	for _, file in pairs(files) do
+		file_flag = file_flag .. "," .. file
 	end
-	local cmd = "markdown-parser --wikiTag='" .. wiki_tag .. "' --files='" .. file_flag .. "'"
+	local cmd = "./parser parse --tag='" .. wiki_tag .. "' --files='" .. vim.trim(file_flag) .. "'"
 	vim.fn.jobstart(cmd, {
 		stdout_buffered = true, -- Set to true for buffered output
 		on_stdout = function(_, data)
@@ -107,7 +149,7 @@ local get_matches = function(f)
 				end)
 			end
 		end,
-		on_exit = function(_, code)
+		on_exit = function(_)
 			vim.schedule(function()
 				create_tmp_buf(markdown)
 			end)
@@ -123,6 +165,8 @@ end
 M.pick_alias = function(opts)
 	pickers
 		.new(opts, {
+
+			prompt_title = "Tag List",
 			finder = finders.new_table({
 				results = create_fm_list(get_front_matter()),
 				entry_maker = function(entry)
@@ -146,8 +190,8 @@ M.pick_alias = function(opts)
 		:find()
 end
 
---NOTE: Uncomment lines below to hot-reload test
--- M.setup({ path = "/Users/anthonymirville/Projects/Life" })
--- M.pick_alias()
+-- NOTE: Uncomment lines below to hot-reload test
+M.setup({ path = "/Users/anthonymirville/Projects/Life" })
+M.pick_alias()
 
 return M

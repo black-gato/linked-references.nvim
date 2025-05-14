@@ -14,17 +14,19 @@ This for me to learn about building a good plugin for a new editor that I like. 
 
 ### Task List
 
-- [x] got it linking to other markdown files
-- [x]  Need to make sure that all links can be referenced
-- [x] auto complete for tags and pages
-- [x] Make file read-only 
+- [x] Get it linking to other markdown files
+- [x] Need to make sure that all links can be referenced
+- [ ] Make file read-only 
   - [ ] handle errors
 - [ ] Support Indent level note
 - [ ] Make it into an actual plugin
+- [ ] Add the quick list as an option
+- [ ] Write 
+
 
 ### Setup
 
-Requires: ripgrep, yq, find, telescope neovim .0.9.0 obsidian.nvm or a markdown note taking system that uses frontmatter
+Requires: ripgrep, yq, find, telescope neovim .0.9.0 obsidian.nvm or a markdown note taking system that uses frontmatter: currently it is only setup to be used for me but as time goes on I want to expand flexability 
 If you use Lazy.nvim as your plugin manager:
 
 ```{
