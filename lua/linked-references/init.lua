@@ -24,6 +24,7 @@ function M.setup(opts)
 	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias test")
 end
+
 -- this grabs alll the front matter fields and values from all files in M.config.path
 local get_front_matter = function()
 	local cmd = "find "
@@ -178,18 +179,31 @@ M.pick_alias = function(opts)
 				end,
 			}),
 			sorter = config.generic_sorter(opts),
-			attach_mappings = function(prompt_bufnr)
-				actions.select_default:replace(function()
-					local selection = action_state.get_selected_entry()
+			attach_mappings = function(_, map)
+				local function on_select(prompt_bufnr)
+					local picker = action_state.get_current_picker(prompt_bufnr)
+					local selections = picker:get_multi_selection()
+
+					if vim.tbl_isempty(selections) then
+						table.insert(selections, action_state.get_selected_entry())
+					end
 					actions.close(prompt_bufnr)
-					generate_reference_list(selection.value)
-				end)
+					generate_reference_list(selections)
+				end
+				map("i", "<CR>", on_select)
+				map("n", "<CR>", on_select)
+				map("i", "<Tab>", actions.toggle_selection + actions.move_selection_worse)
+				map("n", "<Tab>", actions.toggle_selection + actions.move_selection_worse)
+				map("i", "<S-Tab>", actions.toggle_selection + actions.move_selection_better)
+				map("n", "<S-Tab>", actions.toggle_selection + actions.move_selection_better)
+
 				return true
 			end,
 		})
 		:find()
 end
 
+-- Make the function available for :lua calls
 -- NOTE: Uncomment lines below to hot-reload test
 M.setup({ path = "/Users/anthonymirville/Projects/Life" })
 M.pick_alias()
