@@ -68,6 +68,7 @@ local create_fm_list = function(front_matter_obj)
 	end
 	return alias_obj
 end
+
 local alias_match = function(input)
 	-- TODO: need to Make the pattern configurable
 	M._wiki_tags = ""
@@ -205,7 +206,7 @@ end
 
 -- Make the function available for :lua calls
 -- NOTE: Uncomment lines below to hot-reload test
-M.setup({ path = "/Users/anthonymirville/Projects/Life" })
-M.pick_alias()
+--M.setup({ path = "/Users/anthonymirville/Projects/Life" })
+--M.pick_alias()
 
 return M
