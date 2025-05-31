@@ -76,7 +76,7 @@ local alias_match = function(input)
 	local cmd
 	if #input > 1 then
 		for _, obj in ipairs(input) do
-			M._wiki_tags = M._wiki_tags .. format_wiki_tag(obj.value)
+			M._wiki_tags = M._wiki_tags .. format_wiki_tag(obj.value) .. ","
 			cmd = vim.fn.system(
 				"rg -l -i "
 					.. M.config.path
@@ -111,10 +111,8 @@ end
 
 ---@param content string
 local create_tmp_buf = function(content)
-	local alias_name = M._alias_name
-	if alias_name == "" then
-		alias_name = "Group Search"
-	end
+	local alias_name = M._alias_name or "Group Search"
+
 	-- BUG: need to make the file be able to just quit with q not q!
 	if #content ~= 0 then
 		vim.cmd("vsplit |e " .. alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
@@ -126,15 +124,27 @@ local create_tmp_buf = function(content)
 	vim.notify_once("Looks You haven't written anything on this topics.", vim.log.levels.INFO)
 end
 
+---@param files string[]
+local de_dup = function(files)
+	local set = {}
+	for _, file in pairs(files) do
+		set[file] = true
+	end
+	return set
+end
+
 local get_matches = function(f)
 	local wiki_tag = M._wiki_tags
 	local markdown = ""
 	local file_flag = ""
-	local files = vim.iter(f):flatten():totable()
-	for _, file in pairs(files) do
-		file_flag = file_flag .. "," .. file
+	local files = de_dup(vim.iter(f):flatten():totable())
+
+	for file, _ in pairs(files) do
+		file_flag = file_flag .. file .. ","
 	end
+
 	local cmd = "./parser parse --tag='" .. wiki_tag .. "' --files='" .. vim.trim(file_flag) .. "'"
+	-- print(cmd)
 	vim.fn.jobstart(cmd, {
 		stdout_buffered = true, -- Set to true for buffered output
 		on_stdout = function(_, data)
