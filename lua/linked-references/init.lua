@@ -136,15 +136,15 @@ end
 local get_matches = function(f)
 	local wiki_tag = M._wiki_tags
 	local markdown = ""
-	local file_flag = ""
+	local file_list = {}
 	local files = de_dup(vim.iter(f):flatten():totable())
 
 	for file, _ in pairs(files) do
-		file_flag = file_flag .. file .. ","
+		table.insert(file_list, file)
 	end
+	file_flag = table.concat(file_list, ",")
 
-	local cmd = "./parser parse --tag='" .. wiki_tag .. "' --files='" .. vim.trim(file_flag) .. "'"
-	-- print(cmd)
+	local cmd = "parser parse --tag='" .. wiki_tag .. "' --files='" .. vim.trim(file_flag) .. "'"
 	vim.fn.jobstart(cmd, {
 		stdout_buffered = true, -- Set to true for buffered output
 		on_stdout = function(_, data)
