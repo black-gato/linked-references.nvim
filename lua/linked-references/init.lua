@@ -71,12 +71,12 @@ end
 
 local alias_match = function(input)
 	-- TODO: need to Make the pattern configurable
-	M._wiki_tags = ""
+	M._wiki_tags = {}
 	local lines = {}
 	local cmd
 	if #input > 1 then
 		for _, obj in ipairs(input) do
-			M._wiki_tags = M._wiki_tags .. format_wiki_tag(obj.value) .. ","
+			table.insert(M._wiki_tags, (format_wiki_tag(obj.value)))
 			cmd = vim.fn.system(
 				"rg -l -i "
 					.. M.config.path
@@ -95,7 +95,6 @@ local alias_match = function(input)
 	input = input[1]
 	M._alias_name = input.value.alias_name
 	M._wiki_tags = "[[" .. input.value.id .. "|" .. input.value.alias_name .. "]]"
-
 	cmd = vim.fn.system(
 		"rg -l -i "
 			.. M.config.path
@@ -142,9 +141,10 @@ local get_matches = function(f)
 	for file, _ in pairs(files) do
 		table.insert(file_list, file)
 	end
-	file_flag = table.concat(file_list, ",")
+	local file_flag = table.concat(file_list, ",")
+	local tag_flag = table.concat(wiki_tag, ",")
 
-	local cmd = "parser parse --tag='" .. wiki_tag .. "' --files='" .. vim.trim(file_flag) .. "'"
+	local cmd = "parser parse --tag='" .. tag_flag .. "' --files='" .. vim.trim(file_flag) .. "'"
 	vim.fn.jobstart(cmd, {
 		stdout_buffered = true, -- Set to true for buffered output
 		on_stdout = function(_, data)
