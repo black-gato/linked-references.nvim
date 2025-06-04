@@ -41,6 +41,7 @@ local get_front_matter = function()
 	end
 	return front_matter_obj
 end
+
 local format_wiki_tag = function(entry)
 	local format = M.config.wiki_tag_format
 	if type(format) == "function" then
@@ -70,56 +71,41 @@ local create_fm_list = function(front_matter_obj)
 end
 
 local alias_match = function(input)
-	-- TODO: need to Make the pattern configurable
 	M._wiki_tags = {}
 	local lines = {}
 	local cmd
-	if #input > 1 then
-		for _, obj in ipairs(input) do
-			table.insert(M._wiki_tags, (format_wiki_tag(obj.value)))
-			cmd = vim.fn.system(
-				"rg -l -i "
-					.. M.config.path
-					.. ' -e  ".* \\[\\['
-					.. obj.value.id
-					.. "\\|"
-					.. obj.value.alias_name
-					.. '\\]\\].*"'
-			)
-			if #vim.split(cmd, "\n", { trimempty = true }) ~= 0 then
-				table.insert(lines, vim.split(cmd, "\n", { trimempty = true }))
-			end
+	for _, obj in ipairs(input) do
+		table.insert(M._wiki_tags, (format_wiki_tag(obj.value)))
+		cmd = vim.fn.system(
+			"rg -l -i "
+				.. M.config.path
+				.. ' -e  ".* \\[\\['
+				.. obj.value.id
+				.. "\\|"
+				.. obj.value.alias_name
+				.. '\\]\\].*"'
+		)
+		if #vim.split(cmd, "\n", { trimempty = true }) ~= 0 then
+			table.insert(lines, vim.split(cmd, "\n", { trimempty = true }))
 		end
-		return lines
+		if #input == 1 then
+			M._alias_name = obj.value.alias_name
+		else
+			M._alias_name = "Group Search"
+		end
 	end
-	input = input[1]
-	M._alias_name = input.value.alias_name
-	M._wiki_tags = "[[" .. input.value.id .. "|" .. input.value.alias_name .. "]]"
-	cmd = vim.fn.system(
-		"rg -l -i "
-			.. M.config.path
-			.. ' -e  ".* \\[\\['
-			.. input.value.id
-			.. "\\|"
-			.. input.value.alias_name
-			.. '\\]\\].*"'
-	)
-	lines = vim.split(cmd, "\n", { trimempty = true })
 	return lines
 end
 
 ---@param content string
 local create_tmp_buf = function(content)
-	local alias_name = M._alias_name or "Group Search"
-
-	-- BUG: need to make the file be able to just quit with q not q!
+	local alias_name = M._alias_name
 	if #content ~= 0 then
 		vim.cmd("vsplit |e " .. alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
 		local bufnr = vim.api.nvim_get_current_buf()
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
 		return
 	end
-
 	vim.notify_once("Looks You haven't written anything on this topics.", vim.log.levels.INFO)
 end
 
