@@ -56,14 +56,10 @@ end
 -- create an table with document id and alias name
 local create_fm_list = function(front_matter_obj)
 	local alias_obj = {}
-	for _, f_m in pairs(front_matter_obj) do
-		if f_m.aliases ~= nil and next(f_m.aliases) ~= nil then
-			if #f_m.aliases == 1 then
-				table.insert(alias_obj, { alias_name = f_m.aliases[1], id = f_m.id })
-			else
-				for _, alias in pairs(f_m.aliases) do
-					table.insert(alias_obj, { alias_name = alias, id = f_m.id })
-				end
+	for _, front_matter in pairs(front_matter_obj) do
+		if front_matter.aliases ~= nil then
+			for _, alias in pairs(front_matter.aliases) do
+				table.insert(alias_obj, { alias_name = alias, id = front_matter.id })
 			end
 		end
 	end
