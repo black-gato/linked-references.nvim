@@ -71,7 +71,6 @@ local alias_match = function(input)
 	local lines = {}
 	local cmd
 	for _, obj in ipairs(input) do
-		table.insert(M._wiki_tags, (format_wiki_tag(obj.value)))
 		cmd = vim.fn.system(
 			"rg -l -i "
 				.. M.config.path
@@ -82,6 +81,7 @@ local alias_match = function(input)
 				.. '\\]\\].*"'
 		)
 		if #vim.split(cmd, "\n", { trimempty = true }) ~= 0 then
+			table.insert(M._wiki_tags, (format_wiki_tag(obj.value)))
 			table.insert(lines, vim.split(cmd, "\n", { trimempty = true }))
 		end
 		if #input == 1 then
