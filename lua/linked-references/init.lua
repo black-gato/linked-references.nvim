@@ -17,12 +17,15 @@ function M.setup(opts)
 		path = ".",
 		front_matter = "aliases",
 		wiki_tag_format = "[[<id>|<alias>]]",
+		jira = 'jira issue create -tStory -s"[[<title>]]" -b"[[<description>]]" --custom acceptance-critera= "[[<ac>]]"',
 		mappings = {
 			search_alias = "<leader>;",
+			create_jira = "<leader>'",
 		},
 	}
 	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias test")
+	map("v", M.config.mappings.create_jira, M.create_jira, "Create Jira")
 end
 
 -- this grabs alll the front matter fields and values from all files in M.config.path
@@ -96,15 +99,43 @@ end
 ---@param content string
 local create_tmp_buf = function(content)
 	local alias_name = M._alias_name
-	if #content ~= 0 then
-		vim.cmd("vsplit |e " .. alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
-		local bufnr = vim.api.nvim_get_current_buf()
-		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
-		return
+
+	if #content == 0 then
+		vim.notify_once("Looks You haven't written anything on this topics.", vim.log.levels.INFO)
 	end
-	vim.notify_once("Looks You haven't written anything on this topics.", vim.log.levels.INFO)
+	vim.cmd("vsplit |e " .. alias_name .. "| setfiletype markdown | set fileencoding=utf-8")
+	local bufnr = vim.api.nvim_get_current_buf()
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+	return
 end
 
+local function get_visual_selection()
+	local srow, scol = unpack(vim.api.nvim_buf_get_mark(0, "<"))
+	local erow, ecol = unpack(vim.api.nvim_buf_get_mark(0, ">"))
+	local lines = vim.api.nvim_buf_get_lines(0, srow - 1, erow, false)
+	if #lines == 0 then
+		return ""
+	end
+	lines[#lines] = string.sub(lines[#lines], 1, ecol)
+	lines[1] = string.sub(lines[1], scol + 1)
+	return table.concat(lines, "\n")
+end
+
+--[[
+{"title":"This is a title","description":"    - Here is my description\n        - Background and other structures\n","ac":"    - Acceptance Criteria:\n        - AC 1\n        - AC 2\n        - AC 3\n"}
+--]]
+M.create_jira = function()
+	local content = get_visual_selection()
+	local output = vim.fn.system("./markdown-parser jira", content)
+	local jira_body = vim.json.decode(output)
+
+	local cmd = M.config.jira
+		:gsub("<title>", jira_body.title)
+		:gsub("<description>", jira_body.description)
+		:gsub("<ac>", jira_body.ac)
+	output = vim.fn.system(cmd)
+	print(output)
+end
 ---@param files string[]
 local de_dup = function(files)
 	local set = {}
@@ -196,9 +227,19 @@ M.pick_alias = function(opts)
 		:find()
 end
 
+--[[
+- This is a title
+    - Here is my description
+        - Background and other structures
+    - Acceptance Criteria:
+        - AC 1
+        - AC 2
+        - AC 3
+--]]
+
 -- Make the function available for :lua calls
 -- NOTE: Uncomment lines below to hot-reload test
---M.setup({ path = "/Users/anthonymirville/Projects/Life" })
---M.pick_alias()
-
+-- M.setup({ path = "/Users/anthonymirville/Projects/Life" })
+-- M.pick_alias()
+-- M.create_jira()
 return M
