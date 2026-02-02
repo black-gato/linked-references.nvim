@@ -26,8 +26,13 @@ function M.setup(opts)
 	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias test")
 	map("v", M.config.mappings.create_jira, function()
-		vim.cmd('normal! "vy')
-		M.create_jira()
+		if vim.fn.mode() == "\022" then
+			vim.cmd('normal! "vy')
+			M.create_jira()
+		else
+			vim.cmd('normal! "vy')
+			M.create_jira()
+		end
 	end, "Create Jira")
 end
 
