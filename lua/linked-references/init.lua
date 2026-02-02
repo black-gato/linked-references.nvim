@@ -133,6 +133,7 @@ M.create_jira = function()
 		:gsub("<title>", jira_body.title)
 		:gsub("<description>", jira_body.description)
 		:gsub("<ac>", jira_body.ac)
+	print(output)
 	output = vim.fn.system(cmd)
 	print(output)
 end
