@@ -126,6 +126,7 @@ end
 --]]
 M.create_jira = function()
 	local content = get_visual_selection()
+	print(content)
 	local output = vim.fn.system("parser jira", content)
 	local jira_body = vim.json.decode(output)
 
