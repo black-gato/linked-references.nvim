@@ -17,7 +17,7 @@ function M.setup(opts)
 		path = ".",
 		front_matter = "aliases",
 		wiki_tag_format = "[[<id>|<alias>]]",
-		jira = 'jira issue create -tStory -s"[[<title>]]" -b"[[<description>]]" --custom acceptance-critera= "[[<ac>]]"',
+		jira = 'jira issue create -tStory -s"<title>" -b"<description>" --custom acceptance-critera= "<ac>"',
 		mappings = {
 			search_alias = "<leader>;",
 			create_jira = "<leader>'",
@@ -134,6 +134,7 @@ M.create_jira = function()
 		:gsub("<description>", jira_body.description)
 		:gsub("<ac>", jira_body.ac)
 	print(output)
+	print(cmd)
 	output = vim.fn.system(cmd)
 	print(output)
 end
