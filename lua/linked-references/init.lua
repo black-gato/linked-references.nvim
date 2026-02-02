@@ -25,7 +25,10 @@ function M.setup(opts)
 	}
 	M.config = vim.tbl_extend("keep", opts or {}, default)
 	map("n", M.config.mappings.search_alias, M.pick_alias, "Search alias test")
-	map("v", M.config.mappings.create_jira, M.create_jira, "Create Jira")
+	map("v", M.config.mappings.create_jira, function()
+		vim.cmd('normal! "vy')
+		M.create_jira()
+	end, "Create Jira")
 end
 
 -- this grabs alll the front matter fields and values from all files in M.config.path
